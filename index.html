@@ -1,0 +1,237 @@
+<title>Línea de tiempo administrativa</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Concepto: eje vertical con una época por teoría, el color del punto marca el enfoque principal (tareas, estructura, personas, resultados, ambiente, calidad) */
+:root{
+  --bg:#F1F2EE; --fg:#1F2326; --muted:#566067; --axis:#BFC4BC; --chip:#E4E7E0; --chip-on:#1F2326; --chip-on-fg:#F1F2EE;
+  --c-tareas:#C7852B; --c-estructura:#2F7F79; --c-personas:#B24A74; --c-resultados:#B5503C; --c-ambiente:#4C7A34; --c-calidad:#5B63B0;
+  --f-display:'Bricolage Grotesque','Trebuchet MS',sans-serif;
+  --f-body:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181A; --fg:#E6E8E3; --muted:#A3AAA4; --axis:#3B4247; --chip:#242A2D; --chip-on:#E6E8E3; --chip-on-fg:#15181A;
+    --c-tareas:#E0A04A; --c-estructura:#55B3AB; --c-personas:#E389AE; --c-resultados:#E0826C; --c-ambiente:#86B96A; --c-calidad:#A3AAEA;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181A; --fg:#E6E8E3; --muted:#A3AAA4; --axis:#3B4247; --chip:#242A2D; --chip-on:#E6E8E3; --chip-on-fg:#15181A;
+  --c-tareas:#E0A04A; --c-estructura:#55B3AB; --c-personas:#E389AE; --c-resultados:#E0826C; --c-ambiente:#86B96A; --c-calidad:#A3AAEA;
+  color-scheme:dark;
+}
+body{
+  background:var(--bg); color:var(--fg); font-family:var(--f-body); font-size:16px; line-height:1.55;
+  padding-block:32px 56px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap{max-width:760px; margin:0 auto; min-width:0}
+header h1{font-family:var(--f-display); font-weight:800; font-size:clamp(2rem,7vw,3.2rem); line-height:1.05; margin:0 0 14px; text-wrap:balance; letter-spacing:-0.02em}
+header p{margin:0 0 8px; max-width:62ch; color:var(--muted)}
+.by{font-family:var(--f-mono); font-size:.8rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-top:14px}
+.filters{display:flex; flex-wrap:wrap; gap:8px; margin:28px 0 36px; padding:0}
+.filters button{
+  font:500 .85rem var(--f-body); color:var(--fg); background:var(--chip); border:0; border-radius:999px;
+  padding:7px 14px 7px 12px; display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+}
+.filters button[aria-pressed="true"]{background:var(--chip-on); color:var(--chip-on-fg)}
+.filters button:focus-visible{outline:2px solid var(--fg); outline-offset:2px}
+.dot{width:10px; height:10px; border-radius:50%; background:var(--c); flex:none; display:inline-block}
+.timeline{list-style:none; margin:0; padding:0}
+.item{display:grid; grid-template-columns:5rem 22px minmax(0,1fr); column-gap:14px; position:relative}
+.item[hidden]{display:none}
+.year{font-family:var(--f-mono); font-weight:500; text-align:right; padding-top:2px; line-height:1.2}
+.year b{display:block; font-size:1.25rem; font-weight:500}
+.year small{display:block; font-size:.75rem; color:var(--muted); margin-top:3px}
+.rail{position:relative}
+.rail::before{content:""; position:absolute; left:50%; top:0; bottom:0; width:2px; background:var(--axis); transform:translateX(-50%)}
+.item:first-child .rail::before{top:12px}
+.item:last-child .rail::before{bottom:calc(100% - 12px)}
+.rail .dot{position:absolute; left:50%; top:4px; width:16px; height:16px; transform:translateX(-50%); box-shadow:0 0 0 4px var(--bg)}
+.body{padding-bottom:40px; min-width:0}
+.head{display:flex; gap:14px; align-items:flex-start}
+.ico{flex:none; width:56px; height:56px; color:var(--c); background:var(--chip); border-radius:12px; padding:8px}
+.ico svg{width:100%; height:100%; display:block}
+.foto{flex:none; width:96px; height:96px; object-fit:cover; border-radius:12px; background:var(--chip)}
+.head .txt{min-width:0}
+.tag{font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:7px; margin-bottom:4px}
+.head h2{margin:0 0 6px}
+.body h2{font-family:var(--f-display); font-weight:600; font-size:1.45rem; line-height:1.15; margin:0 0 10px; text-wrap:balance}
+.meta{margin:0 0 8px; font-size:.95rem}
+.meta span{color:var(--muted)}
+.body p{margin:0 0 8px; max-width:62ch}
+.src{font-size:.82rem; color:var(--muted)}
+.conclusion{margin-top:8px; max-width:62ch}
+.conclusion h2,.refs h2{font-family:var(--f-display); font-weight:600; font-size:1.45rem; margin:0 0 10px}
+.refs{margin-top:44px}
+.refs ol{margin:0; padding:0; list-style:none; display:grid; gap:12px}
+.refs li{font-size:.9rem; padding-left:2rem; text-indent:-2rem; overflow-wrap:anywhere}
+.refs a{color:inherit; text-decoration:underline; text-underline-offset:3px}
+.note{font-size:.85rem; color:var(--muted); margin-top:20px; max-width:62ch}
+@media (max-width:520px){
+  .item{grid-template-columns:3.6rem 18px minmax(0,1fr); column-gap:10px}
+  .year b{font-size:1.05rem}
+  .rail .dot{width:14px; height:14px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .filters button{transition:background .15s}
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Línea de tiempo de las teorías administrativas</h1>
+    <p>Once teorías ordenadas por época, desde la administración científica de principios del siglo XX hasta los enfoques de calidad y cultura de los años ochenta. Cada punto tiene el color de su enfoque principal y se puede filtrar con los botones.</p>
+    <div class="by">Elaborado por James Ramos Rios</div>
+  </header>
+
+  <div class="filters" id="filters" role="group" aria-label="Filtrar por enfoque"></div>
+
+  <ol class="timeline" id="timeline"></ol>
+
+  <section class="conclusion">
+    <h2>Lo que fue cambiando</h2>
+    <p>La administración empezó mirando la tarea del obrero, después pasó a la estructura de toda la empresa y luego a las personas. Más adelante el centro fue el ambiente que rodea a la organización, que ahora se ve como un sistema abierto y no como algo cerrado (Chiavenato, 2006; Estudios Gerenciales, 2000). Por eso ninguna teoría reemplaza del todo a la anterior: hay empresas que todavía están en las primeras fases de esa evolución, y cada teoría sirve según la situación (Bupo et al., 2004).</p>
+  </section>
+
+  <section class="refs">
+    <h2>Referencias</h2>
+    <ol>
+      <li>Bertalanffy, L. von. (1989). <i>Teoría general de los sistemas</i>. Fondo de Cultura Económica. (Obra original publicada en 1968).</li>
+      <li>Bupo, M. E., Gattás, E., Mauri, G., Peman, G., Rossi, N., &amp; Sanz, L. (2004, 14 de abril). Evolución del pensamiento administrativo: análisis práctico. Gestiopolis. <a href="https://www.gestiopolis.com/evolucion-del-pensamiento-administrativo-analisis-practico/" target="_blank" rel="noopener">https://www.gestiopolis.com/evolucion-del-pensamiento-administrativo-analisis-practico/</a></li>
+      <li>Chiavenato, I. (2006). <i>Introducción a la teoría general de la administración</i> (7.ª ed.). McGraw-Hill.</li>
+      <li>Estudios Gerenciales. (2000). El enfoque de sistemas y de contingencias aplicado al proceso administrativo. <a href="https://doaj.org/article/f1ce94f8d94f4ea09ee6cca8a9dd62bb" target="_blank" rel="noopener">https://doaj.org/article/f1ce94f8d94f4ea09ee6cca8a9dd62bb</a></li>
+      <li>López, M. E. (2006). Las organizaciones y la evolución administrativa. <i>Scientia et Technica, 12</i>(31). <a href="https://dialnet.unirioja.es/descarga/articulo/4830016.pdf" target="_blank" rel="noopener">https://dialnet.unirioja.es/descarga/articulo/4830016.pdf</a></li>
+      <li>Lugo, W. A. (2016). <i>El devenir histórico del pensamiento en administración. Estructura y crítica</i>. Universidad Nacional del Litoral. <a href="https://www.fce.unl.edu.ar/jornadasdeinvestigacion/libro2016/49.pdf" target="_blank" rel="noopener">https://www.fce.unl.edu.ar/jornadasdeinvestigacion/libro2016/49.pdf</a></li>
+      <li>Martínez Cotera, A., Peláez Alvarado, Á., &amp; Salgado Herrera, R. (2016). Aportes de las teorías administrativas a lo largo del tiempo. <i>Liderazgo Estratégico, 6</i>(1), 73-81. <a href="https://revistas.unisimon.edu.co/index.php/liderazgo/article/view/4569" target="_blank" rel="noopener">https://revistas.unisimon.edu.co/index.php/liderazgo/article/view/4569</a></li>
+      <li>Martínez H., L. E., Farfán T., E. A., &amp; Osto P., R. N. (2022). Un acercamiento epistémico a la administración por objetivos. <i>Actualidad Contable FACES, 25</i>(45), 93-104. <a href="https://doi.org/10.53766/ACCON/2022.01.45.05" target="_blank" rel="noopener">https://doi.org/10.53766/ACCON/2022.01.45.05</a></li>
+      <li>Misso, B. (2014, 9 de mayo). How the advice of the past can save us now. <i>Entrepreneur</i>. <a href="https://www.entrepreneur.com/article/233669" target="_blank" rel="noopener">https://www.entrepreneur.com/article/233669</a></li>
+      <li>Rodrigues, J. N. (2002). La película del management en los 92 años de Drucker. <i>Ingeniería Industrial, 1</i>(1), 67-74. <a href="https://revistas.ubiobio.cl/index.php/RI/article/download/168/3391/15474" target="_blank" rel="noopener">https://revistas.ubiobio.cl/index.php/RI/article/download/168/3391/15474</a></li>
+      <li>Theory Z. (2008). En S. R. Clegg &amp; J. R. Bailey (Eds.), <i>International encyclopedia of organization studies</i> (pp. 1550-1551). SAGE Publications. <a href="https://doi.org/10.4135/9781412956246.n535" target="_blank" rel="noopener">https://doi.org/10.4135/9781412956246.n535</a></li>
+      <li>Zapata Rotundo, G. (2014). El determinismo en la teoría contingente: orígenes de sus fundamentos teóricos para su comprensión. <i>Ciencia y Sociedad, 39</i>(1), 121-154. <a href="https://www.redalyc.org/pdf/870/87031229006.pdf" target="_blank" rel="noopener">https://www.redalyc.org/pdf/870/87031229006.pdf</a></li>
+    </ol>
+    <p class="note"></p>
+  </section>
+</div>
+
+<script>
+var ENFOQUES = [
+  {id:'tareas', nombre:'Tareas', c:'--c-tareas'},
+  {id:'estructura', nombre:'Estructura', c:'--c-estructura'},
+  {id:'personas', nombre:'Personas', c:'--c-personas'},
+  {id:'resultados', nombre:'Resultados', c:'--c-resultados'},
+  {id:'ambiente', nombre:'Ambiente', c:'--c-ambiente'},
+  {id:'calidad', nombre:'Calidad y cultura', c:'--c-calidad'}
+];
+var TEORIAS = [
+  {anio:'1911', fin:'', enf:'tareas', nombre:'Administración científica', rep:'Frederick W. Taylor',
+   img:'imagenes/taylor.jpg',
+   aporte:'Busca que cada tarea se haga con la mayor eficiencia posible. Para eso estudia el trabajo del obrero, selecciona y entrena al personal y organiza los métodos con criterio científico, en vez de dejarlo a la costumbre.',
+   fuente:'(Chiavenato, 2006; Martínez Cotera et al., 2016)'},
+  {anio:'1916', fin:'', enf:'estructura', nombre:'Teoría clásica', rep:'Henri Fayol',
+   img:'imagenes/fayol.jpg',
+   aporte:'Mira la organización completa y no solo la fábrica. Define las funciones del administrador (planear, organizar, dirigir, coordinar y controlar) y propone catorce principios de administración.',
+   fuente:'(Martínez Cotera et al., 2016; López, 2006)'},
+  {anio:'1922', fin:'', enf:'estructura', nombre:'Teoría burocrática', rep:'Max Weber',
+   img:'imagenes/weber.jpg',
+   aporte:'Describe una organización racional basada en la jerarquía, la autoridad formal y reglas y procedimientos claros, para que el trabajo no dependa de la voluntad de una persona.',
+   fuente:'(Chiavenato, 2006; Martínez Cotera et al., 2016)'},
+  {anio:'1924', fin:'1932', enf:'personas', nombre:'Relaciones humanas', rep:'Elton Mayo',
+   img:'imagenes/mayo.jpg',
+   aporte:'Los experimentos de Hawthorne mostraron que el rendimiento no depende solo del método o del pago. Los aspectos sociales, las emociones y los grupos de trabajo también pesan, y eso cambió el rumbo del pensamiento administrativo.',
+   fuente:'(López, 2006; Martínez Cotera et al., 2016)'},
+  {anio:'1947', fin:'', enf:'personas', nombre:'Teoría del comportamiento y de las decisiones', rep:'Herbert Simon',
+   img:'imagenes/simon.jpg',
+   aporte:'Ve la organización como un conjunto de personas que toman decisiones. Fue un crítico fuerte de los principios de la teoría clásica y puso la decisión como centro del análisis.',
+   fuente:'(Lugo, 2016)'},
+  {anio:'1954', fin:'', enf:'resultados', nombre:'Teoría neoclásica y administración por objetivos', rep:'Peter F. Drucker',
+   img:'imagenes/drucker.jpg',
+   aporte:'En The Practice of Management propuso la administración por objetivos (APO): fijar metas claras y medibles que todos en la empresa entiendan, y evaluar según los resultados.',
+   fuente:'(Martínez et al., 2022; Martínez Cotera et al., 2016)'},
+  {anio:'1960', fin:'', enf:'personas', nombre:'Teoría X y Teoría Y', rep:'Douglas McGregor',
+   img:'imagenes/mcgregor.jpg',
+   aporte:'Plantea dos formas opuestas de ver al trabajador. En la X reina la autoridad y el control del jefe, y en la Y se confía en la persona y en su capacidad de comprometerse con el trabajo.',
+   fuente:'(Rodrigues, 2002)'},
+  {anio:'1950', fin:'1968', enf:'ambiente', nombre:'Teoría general de sistemas', rep:'Ludwig von Bertalanffy',
+   img:'imagenes/bertalanffy.jpg',
+   aporte:'Biólogo que planteó una teoría válida para muchas ciencias. En administración, la empresa pasa a verse como un sistema abierto que depende de su entorno y de la tecnología, y se preocupa por la eficacia además de la eficiencia.',
+   fuente:'(Bertalanffy, 1989; Estudios Gerenciales, 2000)'},
+  {anio:'1961', fin:'1967', enf:'ambiente', nombre:'Teoría de la contingencia', rep:'Burns y Stalker; Lawrence y Lorsch',
+   img:'imagenes/contingencia.jpg',
+   aporte:'Dice que no existe una sola mejor manera de organizar. La estructura y la administración adecuadas dependen de factores internos y externos, o sea, de la situación.',
+   fuente:'(Zapata, 2014; Estudios Gerenciales, 2000)'},
+  {anio:'1950', fin:'1982', enf:'calidad', nombre:'Calidad total', rep:'W. Edwards Deming',
+   img:'imagenes/deming.jpg',
+   aporte:'Enseñó a la industria japonesa después de la guerra que la calidad la lidera la gerencia. Propuso 14 puntos, el ciclo planear-hacer-verificar-actuar y, en Out of the Crisis (1982), la idea de que administrar es liderar.',
+   fuente:'(Theory Z, 2008; Misso, 2014)'},
+  {anio:'1981', fin:'', enf:'calidad', nombre:'Teoría Z', rep:'William Ouchi',
+   img:'imagenes/ouchi.jpg',
+   aporte:'Mezcla el estilo japonés con el estadounidense de los años ochenta. Busca la participación de los empleados en las decisiones y trabajadores con habilidades variadas, sin perder el orden de la gerencia occidental.',
+   fuente:'(Theory Z, 2008)'}
+];
+var ICONOS = {
+ 'Administración científica':'<circle cx="32" cy="36" r="20"/><path d="M32 36V24M32 36l9 5M26 10h12M32 10v6"/>',
+ 'Teoría clásica':'<rect x="22" y="8" width="20" height="12" rx="2"/><rect x="4" y="44" width="16" height="12" rx="2"/><rect x="24" y="44" width="16" height="12" rx="2"/><rect x="44" y="44" width="16" height="12" rx="2"/><path d="M32 20v12M12 44V32h40v12M32 32v12"/>',
+ 'Teoría burocrática':'<path d="M32 6L58 24H6zM10 28h44M14 32v18M26 32v18M38 32v18M50 32v18M8 54h48"/>',
+ 'Relaciones humanas':'<circle cx="32" cy="18" r="8"/><circle cx="12" cy="26" r="6"/><circle cx="52" cy="26" r="6"/><path d="M18 52c0-10 6-16 14-16s14 6 14 16M2 48c0-8 4-12 10-12M62 48c0-8-4-12-10-12"/>',
+ 'Teoría del comportamiento y de las decisiones':'<circle cx="10" cy="32" r="5"/><path d="M15 32h14M29 32l22-18M29 32h22M29 32l22 18"/><circle cx="55" cy="14" r="4"/><circle cx="55" cy="32" r="4"/><circle cx="55" cy="50" r="4"/>',
+ 'Teoría neoclásica y administración por objetivos':'<circle cx="30" cy="34" r="22"/><circle cx="30" cy="34" r="13"/><circle cx="30" cy="34" r="4"/><path d="M30 34L56 8M48 8h8v8"/>',
+ 'Teoría X y Teoría Y':'<path d="M6 12l22 40M28 12L6 52M40 12l8 18 8-18M48 30v22"/>',
+ 'Teoría general de sistemas':'<circle cx="32" cy="32" r="14"/><path d="M2 32h14M48 32h14M32 2v14M32 48v14M10 10l8 8M54 54l-8-8"/><path d="M12 28l4 4-4 4M52 28l4 4-4 4" stroke-width="2"/>',
+ 'Teoría de la contingencia':'<path d="M32 4l12 12-12 12-12-12zM32 28v8M32 36L14 52M32 36l18 16"/><circle cx="14" cy="54" r="4"/><circle cx="50" cy="54" r="4"/>',
+ 'Calidad total':'<path d="M52 20a22 22 0 1 0 4 14"/><path d="M52 8v14H38"/><path d="M24 34l6 6 12-14"/>',
+ 'Teoría Z':'<circle cx="24" cy="32" r="18"/><circle cx="40" cy="32" r="18"/>'
+};
+(function(){
+  var lista = document.getElementById('timeline');
+  var filtros = document.getElementById('filters');
+  function el(t, cls, txt){ var e=document.createElement(t); if(cls) e.className=cls; if(txt!==undefined) e.textContent=txt; return e; }
+  function enfoque(id){ for(var i=0;i<ENFOQUES.length;i++){ if(ENFOQUES[i].id===id) return ENFOQUES[i]; } }
+  TEORIAS.forEach(function(t){
+    var e = enfoque(t.enf);
+    var li = el('li','item'); li.setAttribute('data-enf', t.enf); li.style.setProperty('--c','var('+e.c+')');
+    var y = el('div','year'); y.appendChild(el('b','',t.anio)); if(t.fin) y.appendChild(el('small','','a '+t.fin));
+    var rail = el('div','rail'); rail.appendChild(el('span','dot'));
+    var b = el('div','body');
+    var head = el('div','head');
+    var ico = el('div','ico'); ico.setAttribute('aria-hidden','true');
+    ico.innerHTML = '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">'+(ICONOS[t.nombre]||'')+'</svg>';
+    var txt = el('div','txt');
+    var tag = el('div','tag'); var d=el('span','dot'); tag.appendChild(d); tag.appendChild(document.createTextNode('Enfoque en '+(t.enf==='calidad'?'la calidad y la cultura':e.nombre.toLowerCase()))); txt.appendChild(tag);
+    txt.appendChild(el('h2','',t.nombre));
+    if (t.img) {
+      var im = document.createElement('img');
+      im.className = 'foto';
+      im.alt = t.rep;
+      im.src = t.img;
+      im.onerror = function(){ head.replaceChild(ico, im); };
+      head.appendChild(im);
+    } else {
+      head.appendChild(ico);
+    }
+    head.appendChild(txt); b.appendChild(head);
+    var m = el('p','meta'); var s=el('span','','Principal representante: '); m.appendChild(s); m.appendChild(document.createTextNode(t.rep)); b.appendChild(m);
+    b.appendChild(el('p','',t.aporte));
+    b.appendChild(el('div','src',t.fuente));
+    li.appendChild(y); li.appendChild(rail); li.appendChild(b); lista.appendChild(li);
+  });
+  var activo = 'todas';
+  function boton(id, texto, c){
+    var bt = el('button','',''); bt.type='button'; bt.setAttribute('data-f', id);
+    if(c){ var d=el('span','dot'); d.style.setProperty('--c','var('+c+')'); bt.appendChild(d); }
+    bt.appendChild(document.createTextNode(texto));
+    bt.setAttribute('aria-pressed', id===activo ? 'true':'false');
+    bt.addEventListener('click', function(){ activo=id; aplicar(); });
+    filtros.appendChild(bt);
+  }
+  boton('todas','Todas',null);
+  ENFOQUES.forEach(function(e){ boton(e.id, e.nombre, e.c); });
+  function aplicar(){
+    Array.prototype.forEach.call(filtros.children, function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-f')===activo ? 'true':'false'); });
+    Array.prototype.forEach.call(lista.children, function(li){ li.hidden = !(activo==='todas' || li.getAttribute('data-enf')===activo); });
+  }
+})();
+</script>
